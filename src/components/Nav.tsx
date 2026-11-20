@@ -7,6 +7,7 @@ import { NAV } from "@/lib/content";
 import { useEnquiry } from "./EnquiryDialog";
 import { EASE } from "./Reveal";
 import { lenisRef } from "./SmoothScroll";
+import { ThemeToggle } from "./ThemeToggle";
 
 /** Seconds to wait before the bar reveals, so it lands as the preloader lifts. Tune to taste. */
 const HOME_INTRO = 1.5;
@@ -188,7 +189,9 @@ export function Nav() {
 
         <NavLinks links={links} active={active} introDelay={INTRO} />
 
+        <div className="flex items-center gap-1">
         <CtaButton solid={solid} onClick={enquire} delay={INTRO + 0.5} />
+        <ThemeToggle />
 
         <motion.button aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)} whileTap={{ scale: 0.88 }}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, ease: EASE, delay: INTRO + 0.3 }}
@@ -196,6 +199,7 @@ export function Nav() {
           <i className={`absolute left-2.5 h-px bg-current transition-all duration-500 ${open ? "top-5 right-2.5 rotate-45" : "top-[18px] right-2.5 group-hover/burger:right-3.5"}`} />
           <i className={`absolute left-2.5 h-px bg-current transition-all duration-500 ${open ? "top-5 right-2.5 -rotate-45" : "top-[25px] right-2.5 group-hover/burger:left-3.5"}`} />
         </motion.button>
+        </div>
       </div>
 
       <AnimatePresence>

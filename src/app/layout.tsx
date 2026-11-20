@@ -20,9 +20,13 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
+/** Runs before first paint: apply the saved theme, else the visitor's system preference. */
+const THEME_INIT = `try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${instrument.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${instrument.variable}`}>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT }} /></head>
       <body className="font-sans"><SmoothScroll /><ScrollProgress /><Cursor />
         <EnquiryProvider><Nav /><main>{children}</main><Footer /><MobileBar /><ScrollTop /></EnquiryProvider></body>
     </html>

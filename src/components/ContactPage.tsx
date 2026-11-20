@@ -95,7 +95,6 @@ export function ContactPage() {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-3">
-                <a href={c.map.url} target="_blank" rel="noopener noreferrer" className="btn btn-solid">Open in Google Maps <span className="btn-dot">↗</span></a>
                 <a href={c.map.directions} target="_blank" rel="noopener noreferrer" className="btn border border-line text-ink hover:border-acc hover:text-acc">Get directions <span className="btn-dot bg-bg2">↗</span></a>
               </div>
             </div>

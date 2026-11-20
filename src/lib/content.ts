@@ -10,7 +10,7 @@ export const SITE = {
     social: [] as { name: string; url: string }[],
     /** Google Maps listing for the studio. `url` opens the place page; `embed` drives the map on the Contact page; `directions` starts navigation. */
     map: {
-      url: "https://www.google.com/maps/place/ARCH-AID/@19.0228748,72.8403874,17z/data=!3m1!4b1!4m6!3m5!1s0x3be7c92e5f5d698b:0x1dd2ec7196707731!8m2!3d19.0228748!4d72.8403874!16s%2Fg%2F11h5482dc_?entry=ttu&g_ep=EgoyMDI2MTExNy4wIKXMDSoASAFQAw%3D%3D",
+      url: "https://maps.app.goo.gl/ZXq9vWn2a6X5dEZ56",
       embed: "https://www.google.com/maps?q=19.0228748,72.8403874&z=17&output=embed",
       directions: "https://www.google.com/maps/dir/?api=1&destination=19.0228748,72.8403874",
     },

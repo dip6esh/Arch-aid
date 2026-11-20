@@ -3,9 +3,10 @@
 :root {
   --bg: #f3efe8; --bg2: #e9e3d8; --ink: #25221f; --mute: #6f675d; --line: #d4ccbf; --acc: #b8801f; --char: #25221f; --cream: #f3efe8;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #1d1b19; --bg2: #272421; --ink: #efe9de; --mute: #a79f93; --line: #3b3631; --acc: #d29a3a; }
-}
+/* Theme: html[data-theme="dark"|"light"] is set by ThemeToggle (and by the inline script in layout.tsx before first paint). */
+:root[data-theme="dark"] { color-scheme: dark; --bg: #1d1b19; --bg2: #272421; --ink: #efe9de; --mute: #a79f93; --line: #3b3631; --acc: #d29a3a; }
+:root[data-theme="light"] { color-scheme: light; }
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 @theme inline {
   --color-bg: var(--bg); --color-bg2: var(--bg2); --color-ink: var(--ink); --color-mute: var(--mute);
   --color-line: var(--line); --color-acc: var(--acc); --color-char: var(--char); --color-cream: var(--cream);

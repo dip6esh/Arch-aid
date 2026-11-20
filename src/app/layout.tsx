@@ -1,0 +1,30 @@
+import type { Metadata, Viewport } from "next";
+import { Instrument_Serif, Manrope } from "next/font/google";
+import { Cursor } from "@/components/Cursor";
+import { EnquiryProvider } from "@/components/EnquiryDialog";
+import { MobileBar } from "@/components/MobileBar";
+import { ScrollTop } from "@/components/ScrollTop";
+import { Footer } from "@/components/Footer";
+import { Nav } from "@/components/Nav";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { SmoothScroll } from "@/components/SmoothScroll";
+import "./globals.css";
+
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
+const instrument = Instrument_Serif({ subsets: ["latin"], variable: "--font-instrument", weight: "400", style: ["normal", "italic"] });
+
+export const metadata: Metadata = {
+  title: { default: "ARCH-AID | Architecture & Interior Design", template: "%s | ARCH-AID" },
+  description: "ARCH-AID is an architecture and interior design practice creating thoughtfully designed, distinctive spaces.",
+  openGraph: { title: "ARCH-AID", description: "Spaces that tell your story.", images: ["/images/banner.webp"] },
+};
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${manrope.variable} ${instrument.variable}`}>
+      <body className="font-sans"><SmoothScroll /><ScrollProgress /><Cursor />
+        <EnquiryProvider><Nav /><main>{children}</main><Footer /><MobileBar /><ScrollTop /></EnquiryProvider></body>
+    </html>
+  );
+}

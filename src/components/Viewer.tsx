@@ -45,6 +45,14 @@ export function Viewer({ items, index, onChange }: { items: Project[]; index: nu
               className="absolute inset-x-4 inset-y-0 cursor-grab active:cursor-grabbing sm:inset-x-24">
               <Image src={pics[slide] ?? img(p.img)} alt={`${p.name} – image ${slide + 1} of ${pics.length}`} fill sizes="100vw" priority draggable={false} className="pointer-events-none object-contain" />
             </motion.div>
+            {/* Warm-up: the neighbouring slides load (invisibly, at the same size) while this one is being looked at. */}
+            {pics.length > 1 && (
+              <div aria-hidden className="pointer-events-none invisible absolute inset-x-4 inset-y-0 sm:inset-x-24">
+                {[...new Set([(slide + 1) % pics.length, (slide - 1 + pics.length) % pics.length])].map((k) => (
+                  <Image key={pics[k]} src={pics[k]} alt="" fill sizes="100vw" loading="eager" fetchPriority="low" className="object-contain" />
+                ))}
+              </div>
+            )}
             {pics.length > 1 && <>
               <button aria-label="Previous image" onClick={() => go(-1)} className="absolute left-4 top-1/2 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-white/25 transition hover:bg-white/10 sm:grid">←</button>
               <button aria-label="Next image" onClick={() => go(1)} className="absolute right-4 top-1/2 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-white/25 transition hover:bg-white/10 sm:grid">→</button>

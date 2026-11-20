@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CLIENTS } from "@/lib/content";
 import { EASE, Reveal, Words } from "./Reveal";
 import { lenisRef } from "./SmoothScroll";
@@ -39,6 +39,8 @@ function Index({ active, onPick }: { active: number; onPick: (i: number) => void
   const [group, setGroup] = useState<Group>("All");
   const [hover, setHover] = useState<number | null>(null);
   const pv = useRef<HTMLDivElement>(null);
+  const [canHover, setCanHover] = useState(false); // phones and tablets never show the hover preview, so they should not download 18 hidden portraits
+  useEffect(() => { setCanHover(matchMedia("(hover: hover) and (pointer: fine)").matches); }, []);
   const count = (g: Group) => (g === "All" ? CLIENTS.length : CLIENTS.filter((c) => groupOf(c[1]) === g).length);
   const list = CLIENTS.map((c, i) => ({ c, i })).filter(({ c }) => group === "All" || groupOf(c[1]) === group);
   const place = (e: React.PointerEvent) => {
@@ -80,7 +82,7 @@ function Index({ active, onPick }: { active: number; onPick: (i: number) => void
       {/* Hover preview: every portrait is stacked here, so switching names never waits for an image */}
       <div ref={pv} aria-hidden
         className={`pointer-events-none fixed left-0 top-0 z-30 hidden aspect-[4/5] w-40 overflow-hidden rounded-xl bg-bg2 shadow-[0_24px_48px_-20px_rgb(0_0_0/.55)] ring-1 ring-black/5 transition-opacity duration-200 lg:w-48 [@media(hover:hover)]:block ${hover === null ? "opacity-0" : "opacity-100"}`}>
-        {CLIENTS.map(([n, , photo], i) => (
+        {canHover && CLIENTS.map(([n, , photo], i) => (
           <Image key={n} src={photo} alt="" fill sizes="12rem" loading="eager" className={`object-cover object-top transition-opacity duration-150 ${hover === i ? "opacity-100" : "opacity-0"}`} />
         ))}
       </div>

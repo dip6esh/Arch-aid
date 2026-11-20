@@ -92,12 +92,12 @@ export const STAGES = [
 ] as const;
 
 export const TEAM = [
-  { n: "Neilesh Kenkare", photo: "/images/neilesh.jpg",
+  { n: "Neilesh Kenkare", photo: "/images/neilesh-team.webp",
     bio: [
       "Neilesh Kenkare is an Architect graduated from Sir J.J. college of Architecture who Heads the firm. Having over 28 years of experience in the profession, Neilesh also has good experience in Hospitality and Health clubs planning and has worked and designed various Restaurants, Bars, Gyms and Resorts. Neilesh has expertise in time and money management related to the project and budgeting along with the execution on site.",
       "Neilesh has taught in L.S.Raheja School of Interior Designing, Garodia School, Sir J.J. College of Architecture and NMIMS school of Architecture and also taught in the Department of Design and Interior Design at Rachana Sansad’s Academy of Architecture at Prabhadevi.",
     ] },
-  { n: "Bhavya Kenkare", photo: "/images/bhavya.png",
+  { n: "Bhavya Kenkare", photo: "/images/bhavya.webp",
     bio: [
       "A graduate of Sir JJ College of Architecture, is a qualified architect and interior designer practicing in Mumbai, Ar. Bhavya Kenkare is a partner with husband Ar. Neilesh Kenkare at their firm, Arch-Aid, in addition to running her own full-fledged independent practice. Her practice of over 24 years covers architectural as well as interior design solutions. She has been part of the jury panels for several design competitions and teaches Interior Design at LS Raheja College of Architecture and Rachana Sansad’s Academy of Architecture, Mumbai. High end residential and hospitality designs have been her forte, as she specializes in fine detailing and impressive presentations that she finishes personally, and nurtures an innate knack for curating and matching art and accessories. Bhavya Kenkare’s work can be seen featured in many publications and has also been awarded recognitions on several occasions.",
     ] },

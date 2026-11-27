@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f3efe8; --bg2: #e9e3d8; --ink: #25221f; --mute: #6f675d; --line: #d4ccbf; --acc: #b8801f; --char: #25221f; --cream: #f3efe8;
+}
+/* Theme: html[data-theme="dark"|"light"] is set by ThemeToggle (and by the inline script in layout.tsx before first paint). */
+:root[data-theme="dark"] { color-scheme: dark; --bg: #1d1b19; --bg2: #272421; --ink: #efe9de; --mute: #a79f93; --line: #3b3631; --acc: #d29a3a; }
+:root[data-theme="light"] { color-scheme: light; }
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@theme inline {
+  --color-bg: var(--bg); --color-bg2: var(--bg2); --color-ink: var(--ink); --color-mute: var(--mute);
+  --color-line: var(--line); --color-acc: var(--acc); --color-char: var(--char); --color-cream: var(--cream);
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-serif: var(--font-instrument), Georgia, serif;
+}
+html { scroll-behavior: smooth; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+@keyframes up { from { opacity: 0; transform: translateY(28px); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@layer components { .rise { animation: up 1.2s cubic-bezier(.2, .7, .2, 1) both; } }
+@media (hover: hover) and (pointer: fine) { [data-cursor] { cursor: none; } }
+html[data-viewer] .site-cursor { display: none; } /* photo viewer open: use the normal pointer only */
+body { background: var(--bg); color: var(--ink); font-weight: 400; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+h1, h2 { font-family: var(--font-serif); font-weight: 400; line-height: .98; letter-spacing: -.02em; }
+h3 { font-family: var(--font-sans); font-weight: 600; line-height: 1.1; letter-spacing: -.03em; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.wrap { margin-inline: auto; max-width: 1600px; padding-inline: clamp(1.25rem, 5vw, 5rem); }
+.sec { padding-block: clamp(3.5rem, 7vw, 6.5rem); }
+.logo { display: inline-block; aspect-ratio: 421/50; background: currentColor; -webkit-mask: url(/images/logo.png) center/contain no-repeat; mask: url(/images/logo.png) center/contain no-repeat; }
+.eyebrow { display: inline-flex; align-items: center; gap: .75rem; font-weight: 700; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--acc); }
+html { overscroll-behavior-y: none; }
+@layer components {
+  .btn { display: inline-flex; align-items: center; gap: .9rem; border-radius: 9999px; padding: .5rem .5rem .5rem 1.6rem; font-size: .875rem; font-weight: 600; transition: background .4s, color .4s, border-color .4s; }
+  .btn-dot { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 9999px; transition: transform .4s; }
+  .btn:hover .btn-dot { transform: translateX(4px) rotate(-45deg); }
+  .btn-solid { background: var(--ink); color: var(--bg); } .btn-solid .btn-dot { background: var(--acc); color: #fff; } .btn-solid:hover { background: var(--acc); color: #fff; } .btn-solid:hover .btn-dot { background: #fff; color: var(--acc); }
+  .btn-light { background: var(--cream); color: var(--char); } .btn-light .btn-dot { background: var(--char); color: var(--cream); } .btn-light:hover { background: var(--acc); color: #fff; }
+  .btn-line { border: 1px solid rgb(255 255 255 / .7); color: #fff; padding: .95rem 1.6rem; } .btn-line:hover { background: rgb(255 255 255 / .15); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Hero stages: masked word-by-word headline, staggered supporting text, mouse drift */
+.stage { opacity: 0; transition: opacity .3s; }
+.stage[data-on="1"] { opacity: 1; transition: opacity .6s .15s; }
+.stage .w { display: inline-block; overflow: hidden; vertical-align: top; padding-block: .1em; margin-block: -.1em; }
+.stage .w > span { display: inline-block; transform: translateY(115%); transition: transform .3s ease-in; }
+.stage[data-on="1"] .w > span { transform: none; transition: transform 1s cubic-bezier(.2, .7, .2, 1) calc(var(--i) * 80ms + 250ms); }
+.stage .fade { opacity: 0; transform: translateY(16px); transition: opacity .25s, transform .25s; }
+.stage[data-on="1"] .fade { opacity: 1; transform: none; transition: opacity .9s ease calc(var(--d, 0) * 1ms + 250ms), transform .9s cubic-bezier(.2, .7, .2, 1) calc(var(--d, 0) * 1ms + 250ms); }
+.stage[data-on="1"] :is(a, button) { pointer-events: auto; }
+.stage-in { transform: translate3d(calc(var(--mx, 0) * -14px), calc(var(--my, 0) * -9px), 0); transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+
+/* Celebrity gallery: caption swaps with a short rise each time a new portrait reaches the middle */
+@keyframes swap { from { opacity: 0; transform: translateY(10px); } }
+.swap { animation: swap .6s cubic-bezier(.2, .7, .2, 1) both; }
+
+/* Horizontal project rail: starts aligned with the page margin, but scrolls edge to edge */
+.rail-pad { --p: clamp(1.25rem, 5vw, 5rem); padding-inline: max(var(--p), calc((100vw - 1600px) / 2 + var(--p))); scroll-padding-inline: max(var(--p), calc((100vw - 1600px) / 2 + var(--p))); }
+
+/* Theme switch: the new theme is drawn on top of the old one and revealed by a growing circle (clip-path is animated in ThemeToggle.tsx) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* While the reveal plays, CSS animations hold still too (the JS loops check the same attribute) */
+html[data-theme-switching] *, html[data-theme-switching] *::before, html[data-theme-switching] *::after { animation-play-state: paused !important; }
+
+/* Project cards that lean toward the mouse, with the photo sliding the other way inside (vars are set from MoreProjects.tsx) */
+.tilt { transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .5s cubic-bezier(.2, .7, .2, 1); will-change: transform; }
+.tilt-img { transform: translate3d(var(--px, 0%), var(--py, 0%), 0) scale(1.12); transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
+
+/* Keep the scrollbar's space reserved even when scrolling is locked (viewer, menu, preloader), so the page never shifts sideways when it comes back */
+html { scrollbar-gutter: stable; }

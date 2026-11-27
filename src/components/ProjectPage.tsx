@@ -3,7 +3,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { img, type Project } from "@/lib/content";
 import { originOf, type Origin } from "@/lib/origin";
-import { useEnquiry } from "./EnquiryDialog";
 import { ImageReveal, Reveal, Words } from "./Reveal";
 import { MoreProjects } from "./MoreProjects";
 import { TLink } from "./Transition";
@@ -19,7 +18,7 @@ function StickyAll() {
     return () => removeEventListener("scroll", f);
   }, []);
   return (
-    <div className={`pointer-events-none fixed inset-x-0 bottom-[5.25rem] z-40 flex justify-center transition-all duration-500 lg:bottom-8 ${on ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
+    <div className={`pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center transition-all duration-500 lg:bottom-8 ${on ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
       <TLink href="/projects" tabIndex={on ? 0 : -1} via={{ mode: "curtain", eyebrow: "Index", title: "All projects" }}
         className={`btn btn-solid shadow-2xl shadow-black/30 ${on ? "pointer-events-auto" : ""}`}>View All Projects <span className="btn-dot"><Arrow /></span></TLink>
     </div>
@@ -28,7 +27,6 @@ function StickyAll() {
 
 /** One project, on its own page (shareable link). Photos reveal as you scroll; click one to view it full screen. */
 export function ProjectPage({ project: p, more }: { project: Project; more: Project[] }) {
-  const enquire = useEnquiry();
   const pics = p.gallery?.length ? p.gallery : [img(p.img)];
   const [open, setOpen] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
@@ -61,7 +59,7 @@ export function ProjectPage({ project: p, more }: { project: Project; more: Proj
 
           {/* meta on the left, actions on the right; one hairline above, same baseline */}
           <Reveal>
-            <div className="mt-8 flex flex-col gap-6 border-t border-line pt-6 sm:mt-12 sm:pt-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+            <div className="mt-8 flex items-center justify-between gap-6 border-t border-line pt-6 sm:mt-12 sm:pt-8 lg:gap-10">
               <dl className="flex flex-wrap gap-x-10 gap-y-4 sm:gap-x-14">
                 {[
                   ["Type", p.cat],
@@ -74,8 +72,7 @@ export function ProjectPage({ project: p, more }: { project: Project; more: Proj
                   </div>
                 ))}
               </dl>
-              <div className="flex items-center gap-3">
-                <button onClick={enquire} className="btn btn-solid max-sm:flex-1 max-sm:justify-between">Discuss a similar project <span className="btn-dot"><Arrow /></span></button>
+              <div className="flex items-center">
                 <button onClick={share} aria-label="Share this project" title="Share"
                   className="grid size-14 shrink-0 place-items-center rounded-full border border-line transition-colors hover:border-acc hover:bg-acc hover:text-white">
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-6">

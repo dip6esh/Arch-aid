@@ -21,7 +21,7 @@ export function ScrollTop() {
       onClick={up}
       aria-label="Scroll to top"
       tabIndex={vis ? 0 : -1}
-      className={`fixed bottom-24 right-4 z-40 grid size-12 place-items-center rounded-full border border-white/15 bg-char/90 text-cream shadow-2xl backdrop-blur-xl transition-all duration-500 hover:bg-acc lg:bottom-[6.25rem] lg:right-6 ${vis ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+      className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 grid size-12 place-items-center rounded-full border border-white/15 bg-char/90 text-cream shadow-2xl backdrop-blur-xl transition-all duration-500 hover:bg-acc lg:bottom-[6.25rem] lg:left-auto lg:right-6 ${vis ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >
       <Arrow dir="up" className="size-5" strokeWidth={2} />
     </button>

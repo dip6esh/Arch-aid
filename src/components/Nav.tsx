@@ -14,7 +14,8 @@ import { Arrow } from "./Arrow";
 /** On the home page the bar mounts when the preloader starts lifting; this is the small extra beat before it drops in. */
 const HOME_INTRO = 0.35;
 const MotionLink = motion.create(TLink);
-const pad = (n: number) => String(n + 1).padStart(2, "0");
+/** Quick-out, soft-landing curve for the mobile menu (fast and smooth rather than slow and dramatic). */
+const SNAP = [0.22, 1, 0.36, 1] as const;
 
 /** Click ripple: a soft accent circle that spreads from the exact point of the press and fades. Render <Ripples/> inside a relative overflow-hidden parent. */
 function useRipples() {
@@ -34,9 +35,9 @@ function Ripples({ list }: { list: { id: number; x: number; y: number }[] }) {
 }
 
 /** One link. The label is pulled towards the pointer (magnetic) and a click sends a ripple out from the press point. */
-function NavItem({ i, href, active, hot, onHover, onMove, onLeave, setRef, children }: {
+function NavItem({ i, href, active, hot, onHover, onPick, onMove, onLeave, setRef, children }: {
   i: number; href: string; active: boolean; hot: boolean; children: string;
-  onHover: (i: number) => void; onMove: (i: number, dx: number) => void; onLeave: () => void; setRef: (i: number, el: HTMLAnchorElement | null) => void;
+  onHover: (i: number) => void; onPick: (i: number) => void; onMove: (i: number, dx: number) => void; onLeave: () => void; setRef: (i: number, el: HTMLAnchorElement | null) => void;
 }) {
   const reduce = useReducedMotion();
   const mx = useMotionValue(0), my = useMotionValue(0);
@@ -44,6 +45,7 @@ function NavItem({ i, href, active, hot, onHover, onMove, onLeave, setRef, child
   const [ripples, down] = useRipples();
   return (
     <TLink href={href} via={{ mode: "wipe", title: typeof children === "string" ? children : undefined }} ref={(el) => setRef(i, el)} onPointerDown={down}
+      onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) onPick(i); }}
       onPointerEnter={(e) => { if (e.pointerType === "mouse") onHover(i); }}
       onPointerMove={(e) => {
         if (e.pointerType !== "mouse") return;
@@ -71,10 +73,14 @@ function NavLinks({ links, active, introDelay }: { links: readonly (readonly [st
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [hover, setHover] = useState<number | null>(null);
   const [press, setPress] = useState(false);
+  // The link that was just clicked. The highlight stays on it while the page transition runs, instead of sliding back to the old page's link.
+  const [pending, setPending] = useState<number | null>(null);
   const shown = useRef(false);
   const reduce = useReducedMotion();
   const activeIdx = links.findIndex(([, h]) => h === active);
-  const idx = hover ?? activeIdx;
+  useEffect(() => { setPending(null); }, [active]); // the new page has arrived: the highlight now belongs to it
+  useEffect(() => { if (pending === null) return; const t = setTimeout(() => setPending(null), 4000); return () => clearTimeout(t); }, [pending]); // safety net if a navigation never completes
+  const idx = pending ?? hover ?? activeIdx;
 
   const px = useMotionValue(0), pw = useMotionValue(0);
   const lx = useSpring(px, { stiffness: 380, damping: 30 }), lw = useSpring(pw, { stiffness: 380, damping: 30 });
@@ -103,7 +109,7 @@ function NavLinks({ links, active, introDelay }: { links: readonly (readonly [st
           </filter>
         </defs>
       </svg>
-      <motion.li aria-hidden initial={{ opacity: 0 }} animate={{ opacity: idx < 0 ? 0 : hover !== null ? 1 : 0.2 }} transition={{ duration: 0.3 }}
+      <motion.li aria-hidden initial={{ opacity: 0 }} animate={{ opacity: idx < 0 ? 0 : hover !== null || pending !== null ? 1 : 0.2 }} transition={{ duration: 0.3 }}
         className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0" style={{ filter: "url(#nav-goo)" }}>
           <motion.i style={{ x: tx, width: tw }} className="absolute inset-y-0 left-0 rounded-full bg-acc" />
@@ -113,7 +119,7 @@ function NavLinks({ links, active, introDelay }: { links: readonly (readonly [st
       </motion.li>
       {links.map(([n, h], i) => (
         <motion.li key={h} initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: introDelay + 0.25 + i * 0.07 }}>
-          <NavItem i={i} href={h} active={active === h} hot={hover === i} onHover={setHover} onMove={() => {}} onLeave={() => setHover(null)} setRef={(k, el) => { refs.current[k] = el; }}>{n}</NavItem>
+          <NavItem i={i} href={h} active={active === h && pending === null} hot={(pending ?? hover) === i} onHover={(k) => { if (pending === null) setHover(k); }} onPick={(k) => { setPending(k); setHover(null); }} onMove={() => {}} onLeave={() => setHover(null)} setRef={(k, el) => { refs.current[k] = el; }}>{n}</NavItem>
         </motion.li>
       ))}
     </ul>
@@ -200,32 +206,28 @@ export function Nav() {
         <motion.button aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)} whileTap={{ scale: 0.88 }}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, ease: EASE, delay: INTRO + 0.3 }}
           className="group/burger relative size-11 rounded-full transition-colors duration-300 hover:bg-white/10 lg:hidden">
-          <i className={`absolute left-2.5 h-px bg-current transition-all duration-500 ${open ? "top-5 right-2.5 rotate-45" : "top-[18px] right-2.5 group-hover/burger:right-3.5"}`} />
-          <i className={`absolute left-2.5 h-px bg-current transition-all duration-500 ${open ? "top-5 right-2.5 -rotate-45" : "top-[25px] right-2.5 group-hover/burger:left-3.5"}`} />
+          <i className={`absolute left-2.5 h-px bg-current transition-all duration-300 ${open ? "top-5 right-2.5 rotate-45" : "top-[18px] right-2.5 group-hover/burger:right-3.5"}`} />
+          <i className={`absolute left-2.5 h-px bg-current transition-all duration-300 ${open ? "top-5 right-2.5 -rotate-45" : "top-[25px] right-2.5 group-hover/burger:left-3.5"}`} />
         </motion.button>
         </div>
       </div>
 
       <AnimatePresence>
         {open && (
-          <motion.ul key="menu" initial={{ clipPath: "inset(0 0 100% 0)" }} animate={{ clipPath: "inset(0 0 0% 0)" }} exit={{ clipPath: "inset(0 0 100% 0)", transition: { duration: 0.55, ease: EASE } }}
-            transition={{ duration: 0.7, ease: EASE }}
-            className="fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top))] flex flex-col overflow-y-auto bg-char px-[clamp(1.25rem,5vw,5rem)] pb-[max(2rem,env(safe-area-inset-bottom))] pt-6">
+          <motion.ul key="menu" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6, transition: { duration: 0.18, ease: "easeIn" } }}
+            transition={{ duration: 0.26, ease: SNAP }}
+            className="fixed inset-x-0 bottom-0 top-[calc(76px+env(safe-area-inset-top))] flex flex-col overflow-y-auto bg-char px-[clamp(1.25rem,5vw,5rem)] pb-[max(2rem,env(safe-area-inset-bottom))] pt-2">
             {NAV.map(([n, h], i) => (
-              <li key={h} className="relative overflow-hidden">
-                <motion.span aria-hidden initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.9, ease: EASE, delay: 0.15 + i * 0.06 }} className="absolute inset-x-0 bottom-0 h-px origin-left bg-white/15" />
-                <TLink href={h} via={{ mode: "wipe", title: n }} onClick={() => setOpen(false)} className="group/m flex items-baseline gap-4 py-4 transition-colors duration-300 active:text-acc">
-                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 + i * 0.06 }} className={`w-6 text-xs tabular-nums transition-colors ${active === h ? "text-acc" : "text-white/40"}`}>{pad(i)}</motion.span>
-                  <span className="block overflow-hidden pb-1">
-                    <motion.span initial={{ y: "110%" }} animate={{ y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.2 + i * 0.06 }}
-                      className={`block font-serif text-5xl transition-transform duration-300 group-active/m:translate-x-2 ${active === h ? "text-acc" : ""}`}>{n}</motion.span>
-                  </span>
-                  <span aria-hidden className="ml-auto -translate-x-2 text-xl text-acc opacity-0 transition-all duration-300 group-active/m:translate-x-0 group-active/m:opacity-100"><Arrow className="size-[1em]" /></span>
+              <motion.li key={h} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: SNAP, delay: 0.04 + i * 0.035 }}
+                className="border-b border-white/10">
+                <TLink href={h} via={{ mode: "wipe", title: n }} onClick={() => setOpen(false)} className="group/m flex items-center gap-4 py-[0.95rem] transition-colors duration-200 active:text-acc">
+                  <span className={`min-w-0 font-serif text-[1.65rem] leading-tight transition-transform duration-200 group-active/m:translate-x-1.5 sm:text-3xl ${active === h ? "text-acc" : ""}`}>{n}</span>
+                  <span aria-hidden className="ml-auto shrink-0 -translate-x-2 text-lg text-acc opacity-0 transition-all duration-200 group-active/m:translate-x-0 group-active/m:opacity-100"><Arrow className="size-[1em]" /></span>
                 </TLink>
-              </li>
+              </motion.li>
             ))}
-            <motion.li initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE, delay: 0.2 + NAV.length * 0.06 }} className="pt-8">
-              <button onClick={() => { setOpen(false); enquire(); }} className="w-full rounded-full border border-white py-4 text-sm font-medium transition-colors duration-300 active:border-acc active:bg-acc">Discuss Your Project</button>
+            <motion.li initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: SNAP, delay: 0.06 + NAV.length * 0.035 }} className="pt-7">
+              <button onClick={() => { setOpen(false); enquire(); }} className="w-full rounded-full border border-white py-3.5 text-sm font-medium transition-colors duration-200 active:border-acc active:bg-acc">Discuss Your Project</button>
             </motion.li>
           </motion.ul>
         )}

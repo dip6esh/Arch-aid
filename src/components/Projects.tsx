@@ -76,7 +76,7 @@ export function Projects({ featured = false }: { featured?: boolean }) {
             </div>
             <div className="mt-5 flex items-center justify-center gap-3">
               <button type="button" aria-label="Previous project" onClick={() => go(-1)} className="grid size-11 place-items-center rounded-full border border-line transition-colors hover:border-acc hover:text-acc"><Arrow dir="left" /></button>
-              <Link href={`/projects/${p.slug}`} onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); openProject(Math.min(active, list.length - 1)); }} className="btn btn-solid">View Album <span className="btn-dot"><Arrow dir="up-right" /></span></Link>
+              <Link href={`/projects/${p.slug}`} onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); openProject(Math.min(active, list.length - 1)); }} className="btn btn-solid w-64 justify-between">View Album <span className="btn-dot"><Arrow dir="up-right" /></span></Link>
               <button type="button" aria-label="Next project" onClick={() => go(1)} className="grid size-11 place-items-center rounded-full border border-line transition-colors hover:border-acc hover:text-acc"><Arrow /></button>
             </div>
           </div>
@@ -85,8 +85,8 @@ export function Projects({ featured = false }: { featured?: boolean }) {
 
       {!featured && list.length > 0 && <ProjectIndex list={list} cat={cat} onCat={pick} />}
 
-      <div className="wrap mt-8 flex flex-wrap justify-center gap-3">
-        {featured && <TLink href="/projects" via={{ mode: "curtain", eyebrow: "Index", title: "All projects" }} className="btn btn-solid">View All Projects <span className="btn-dot"><Arrow /></span></TLink>}
+      <div className="wrap mt-4 flex flex-wrap justify-center gap-3">
+        {featured && <TLink href="/projects" via={{ mode: "curtain", title: "Projects" }} className="btn w-64 justify-between border border-line text-ink hover:border-acc hover:text-acc">View All Projects <span className="btn-dot bg-bg2"><Arrow /></span></TLink>}
       </div>
 
     </section>

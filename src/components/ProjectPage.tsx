@@ -19,7 +19,7 @@ function StickyAll() {
   }, []);
   return (
     <div className={`pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex justify-center transition-all duration-500 lg:bottom-8 ${on ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`}>
-      <TLink href="/projects" tabIndex={on ? 0 : -1} via={{ mode: "curtain", eyebrow: "Index", title: "All projects" }}
+      <TLink href="/projects" tabIndex={on ? 0 : -1} via={{ mode: "curtain", title: "Projects" }}
         className={`btn btn-solid shadow-2xl shadow-black/30 ${on ? "pointer-events-auto" : ""}`}>View All Projects <span className="btn-dot"><Arrow /></span></TLink>
     </div>
   );
@@ -48,7 +48,7 @@ export function ProjectPage({ project: p, more }: { project: Project; more: Proj
       <section className="pt-[calc(76px+2rem)] sm:pt-[calc(76px+3rem)]">
         <div className="wrap">
           <Reveal>
-            <TLink href="/projects" via={{ mode: "curtain", eyebrow: "Index", title: "All projects" }}
+            <TLink href="/projects" via={{ mode: "curtain", title: "Projects" }}
               className="group inline-flex items-center gap-2.5 rounded-full border border-line py-2 pl-3 pr-5 text-sm font-medium text-mute transition-colors hover:border-acc hover:text-acc">
               <Arrow dir="left" className="size-4 transition-transform duration-300 group-hover:-translate-x-1" /> All projects
             </TLink>

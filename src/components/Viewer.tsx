@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { img, type Project } from "@/lib/content";
 import type { Origin } from "@/lib/origin";
 import { reduced } from "./Drive";
@@ -11,13 +11,20 @@ import { EASE } from "./Reveal";
 import { lenisRef } from "./SmoothScroll";
 import { Arrow } from "./Arrow";
 
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 const pad = (n: number) => String(n).padStart(2, "0");
 const HIDE_AFTER = 4500; // ms of stillness before the controls fade out
 const GROW = 0.8;        // seconds for the picture to grow out of its card (and back)
 
-/** The largest rectangle of the given shape that fits the screen, centred: exactly where the full-screen photo ends up. */
-const fit = (ratio: number) => {
-  const vw = innerWidth, vh = innerHeight;
+type Area = { w: number; h: number; x: number; y: number };
+
+/**
+ * The largest rectangle of the given shape that fits the photo area, centred: exactly where the full-screen photo ends up.
+ * `area` is MEASURED from the real photo's own box (not guessed from innerWidth / clientWidth), so the growing picture and the real photo
+ * are guaranteed to occupy the same pixels, whatever the scrollbar, gutter or browser does, and the hand-off between them cannot jump.
+ */
+const fit = (ratio: number, area: Area) => {
+  const vw = area.w, vh = area.h;
   let w = vw, h = vw / ratio;
   if (h > vh) { h = vh; w = vh * ratio; }
   return { left: (vw - w) / 2, top: (vh - h) / 2, width: w, height: h };
@@ -44,6 +51,10 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastPos = useRef({ x: -1, y: -1 }); // last mouse position that counted as "real" movement
   const quietUntil = useRef(0); // after a click-to-hide, ignore mouse jitter for a moment
+  const areaRef = useRef<HTMLDivElement>(null); // the real photo's box: the single source of truth for where the picture lands
+  const [area, setArea] = useState<Area | null>(null);
+  const dialog = useRef<HTMLDivElement>(null); // keyboard focus rests here, not on a button
+  const dragging = useRef(false); // a swipe is in progress (or just ended): the tap that follows it must not toggle the controls
   const overUi = useRef(false); // pointer is resting on a control: keep everything visible
   /** Show the controls and (re)start the countdown to hide them. */
   const wake = useCallback(() => {
@@ -86,6 +97,16 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
     return () => clearTimeout(t);
   }, [mode, arrived, loaded]);
 
+  useIsoLayoutEffect(() => {
+    if (index === null) return;
+    const measure = () => {
+      const r = areaRef.current?.getBoundingClientRect();
+      if (r) setArea((a) => (a && a.w === r.width && a.h === r.height && a.x === r.left && a.y === r.top ? a : { w: r.width, h: r.height, x: r.left, y: r.top }));
+    };
+    measure(); addEventListener("resize", measure);
+    return () => removeEventListener("resize", measure);
+  }, [index, mode]);
+
   const pics = index !== null ? (items[index].gallery?.length ? items[index].gallery! : [img(items[index].img)]) : [];
   const go = useCallback((d: number) => { setSlide((s) => (pics.length ? (s + d + pics.length) % pics.length : 0)); }, [pics.length]);
 
@@ -105,13 +126,17 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
     lenisRef.current?.stop();
     document.documentElement.style.overflow = "hidden";
     document.documentElement.dataset.viewer = "open"; // hides the site's gold follower-cursor while the viewer is up
+    dialog.current?.focus({ preventScroll: true }); // focus the viewer itself so no control is left "holding" the keyboard
     const key = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
       if (e.key === "Escape") closeRef.current();
-      if (e.key === "ArrowRight") go(1);
-      if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
     };
-    addEventListener("keydown", key);
-    return () => { removeEventListener("keydown", key); lenisRef.current?.start(); document.documentElement.style.overflow = ""; delete document.documentElement.dataset.viewer; };
+    addEventListener("keydown", key, true); // capture: runs before anything focused inside the viewer can swallow the key
+    return () => { removeEventListener("keydown", key, true); lenisRef.current?.start(); document.documentElement.style.overflow = ""; delete document.documentElement.dataset.viewer; };
   }, [locked, go]);
 
   // Scrolling while the photo is still shrinking back: finish closing at once, so the page never fights a landing animation aimed at where the card used to be.
@@ -133,8 +158,8 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
 
   // the travelling picture: from the card to the full-screen spot (opening), or back again (closing)
   let ghost: React.ReactNode = null;
-  if (mode !== "off" && origin) {
-    const K = { left: origin.x, top: origin.y, width: origin.w, height: origin.h }, C = fit(origin.ratio);
+  if (mode !== "off" && origin && area) {
+    const K = { left: origin.x - area.x, top: origin.y - area.y, width: origin.w, height: origin.h }, C = fit(origin.ratio, area);
     const opening = mode === "open";
     ghost = (
       <motion.div key={mode} aria-hidden initial={opening ? K : C} animate={opening ? C : K} transition={{ duration: GROW, ease: EASE }}
@@ -150,20 +175,26 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
   return (
     <AnimatePresence>
       {p && index !== null && (
-        <motion.div key="viewer" role="dialog" aria-modal="true" aria-label={p.name} data-lenis-prevent
+        <motion.div key="viewer" ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={p.name} data-lenis-prevent
+          onPointerUp={(e) => { if (e.pointerType === "mouse" && (e.target as HTMLElement).closest("button")) requestAnimationFrame(() => dialog.current?.focus({ preventScroll: true })); }} // after a mouse click on a control, hand the keyboard back to the viewer
           initial={ghostOK ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, pointerEvents: "none" }} transition={{ duration: 0.4 }}
           onPointerMove={onMove}
-          className={`fixed inset-0 z-[90] overflow-hidden text-cream ${mode === "close" ? "pointer-events-none" : ""} ${ui ? "" : "cursor-none"}`}>
+          className={`fixed inset-0 z-[90] overflow-hidden text-cream outline-none ${mode === "close" ? "pointer-events-none" : ""} ${ui ? "" : "cursor-none"}`}>
 
           {/* Dark backdrop (fades in while the picture grows, out while it shrinks) */}
           <motion.div aria-hidden initial={{ opacity: ghostOK ? 0 : 1 }} animate={{ opacity: mode === "close" ? 0 : 1 }}
             transition={{ duration: mode === "close" ? GROW * 0.9 : 0.5 }} className="absolute inset-0 bg-[#0c0b0a]" />
 
           {/* The photo: the whole screen. object-contain shows the full picture at the largest size that fits. */}
-          <div className="absolute inset-0" style={{ visibility: mode === "off" ? "visible" : "hidden" }}>
+          <div ref={areaRef} className="absolute inset-0" style={{ visibility: mode === "off" ? "visible" : "hidden" }}>
             <motion.div key={`${index}-${slide}`} drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.25}
-              onDragEnd={(_, i) => { if (i.offset.x < -70 || i.velocity.x < -500) go(1); else if (i.offset.x > 70 || i.velocity.x > 500) go(-1); }}
-              onTap={() => { // click (mouse) or tap (touch) toggles the controls
+              onDragStart={() => { dragging.current = true; }}
+              onDragEnd={(_, i) => {
+                setTimeout(() => { dragging.current = false; }, 120); // motion still fires a "tap" when a finger lifts after a swipe; this lets onTap tell the two apart
+                if (i.offset.x < -70 || i.velocity.x < -500) go(1); else if (i.offset.x > 70 || i.velocity.x > 500) go(-1);
+              }}
+              onTap={() => { // click (mouse) or tap (touch) toggles the controls, but never at the end of a swipe
+                if (dragging.current) return;
                 if (ui) { clearTimeout(timer.current); setUi(false); quietUntil.current = Date.now() + 800; } else wake();
               }}
               initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, ease: EASE }}
@@ -187,7 +218,7 @@ export function Viewer({ items, index, onChange, origin = null, start = 0, page 
           {/* Top bar (floats over the photo) */}
           <div {...hold} className={`pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 ${fade}`}>
             <span className="rounded-full bg-black/35 px-3.5 py-1.5 text-sm tabular-nums text-white/85 backdrop-blur-md">{pad(slide + 1)} / {pad(pics.length)}</span>
-            <button autoFocus aria-label="Close" onClick={requestClose} className={`pointer-events-auto ${round}`}>×</button>
+            <button aria-label="Close" onClick={requestClose} className={`pointer-events-auto ${round}`}>×</button>
           </div>
 
           {/* Side arrows */}

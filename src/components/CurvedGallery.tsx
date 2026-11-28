@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { originOf, type Origin } from "@/lib/origin";
 import { reduced, switching } from "./Drive";
 
-const MIN_CARDS = 8;   // a short list is repeated so the wall never has a gap
+const MIN_CARDS = 16;  // a short list is repeated so the wall never has a gap, even on a wide screen
 const BASE = 0.3;      // resting spin, in cards per second
 const RESUME = 2.5;    // seconds of calm after a touch before the spin picks up again
 const outCubic = (t: number) => 1 - (1 - t) ** 3;
@@ -54,9 +54,11 @@ export function CurvedGallery({
     const frame = (t: number) => {
       if (switching()) { t0 = t; raf = requestAnimationFrame(frame); return; } // theme reveal playing: hold still
       const dt = Math.min(0.05, Math.max(0, (t - t0) / 1000)); t0 = t;
-      const cw = els[0].offsetWidth, ch = els[0].offsetHeight;
-      // the wall is a cylinder seen from inside: radius and eye distance come from the card width so every screen gets the same look
-      const R = cw * 1.8, theta = (cw * 1.06) / R, P = R * 1.3, k = (P + R) / P;
+      const cw = els[0].offsetWidth, ch = els[0].offsetHeight, W = el.clientWidth;
+      // the wall is a cylinder seen from inside. Its radius comes from the card width (so a phone gets the same look as before) but is
+      // never smaller than 0.44 x the stage width: that is what lets the curved wall run all the way out to both edges of a wide screen
+      // (a card at 1.15 rad lands about 1.23 R from the middle), instead of stopping short with empty space either side.
+      const R = Math.max(cw * 1.8, W * 0.44), theta = (cw * 1.06) / R, P = R * 1.3, k = (P + R) / P;
       if (intro < 1) intro = Math.min(1, intro + dt / 1.8);
       const e = outCubic(intro);
 
@@ -78,12 +80,12 @@ export function CurvedGallery({
         const d = wrap(i - pos + (1 - e) * 2.5, n), ang = Math.abs(d) * theta * (0.35 + 0.65 * e); // the wall unfolds as it arrives
         const a = Math.sign(d) * -ang + mx * 0.07;
         const c = els[i];
-        const op = clamp((1.4 - ang) / 1.1, 0, 1) * e;
+        const op = clamp((1.3 - ang) / 0.25, 0, 1) * e; // solid right out to the screen edge; gone only once the card has turned off-screen / side-on
         c.style.visibility = op < 0.02 ? "hidden" : "visible";
         c.style.opacity = String(op);
         c.style.zIndex = String(Math.round(Math.cos(ang) * 10));
         c.style.transform = `scale(${k}) perspective(${P}px) rotateX(${(-my * 2).toFixed(2)}deg) rotateY(${a.toFixed(4)}rad) translate3d(0,${(-my * 6).toFixed(1)}px,${-R}px) translate3d(${-cw / 2}px,${-ch / 2}px,0)`;
-        if (sh[i]) sh[i].style.opacity = (0.5 * Math.min(1, ang / 1.0)).toFixed(3);
+        if (sh[i]) sh[i].style.opacity = (0.55 * Math.min(1, ang / 1.2) ** 1.2).toFixed(3); // the wall darkens as it curves away, which is what reads as a cylinder
         if (ims[i]) ims[i].style.transform = `translate3d(${(-clamp(d, -1.4, 1.4) * 4).toFixed(2)}%,0,0) scale(1.12)`;
         if (Math.abs(d) < bd) { bd = Math.abs(d); best = i; }
       }
@@ -160,11 +162,11 @@ export function CurvedGallery({
   }, [len, reps]);
 
   const size = landscape
-    ? "h-[calc(var(--cw)*1.02)] [--cw:clamp(15rem,64vw,18rem)] sm:[--cw:22rem] lg:[--cw:26rem]"
-    : "h-[calc(var(--cw)*1.7)] [--cw:clamp(10rem,50vw,12rem)] sm:[--cw:14rem] lg:[--cw:16rem]";
+    ? "h-[calc(var(--cw)*1.12)] [--cw:clamp(15rem,64vw,18rem)] sm:[--cw:22rem] lg:[--cw:26rem]"
+    : "h-[calc(var(--cw)*1.85)] [--cw:clamp(10rem,50vw,12rem)] sm:[--cw:14rem] lg:[--cw:16rem]";
   return (
     <div ref={stage} data-cursor="Drag" aria-hidden={hidden || undefined} aria-label={label} tabIndex={hidden ? undefined : 0}
-      className={`relative ${size} cursor-grab select-none overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_7%,#000_93%,transparent)] [touch-action:pan-y] focus-visible:outline-offset-[-3px]`}>
+      className={`relative ${size} cursor-grab select-none overflow-hidden [touch-action:pan-y] focus-visible:outline-offset-[-3px]`}>
       <ul className="absolute left-1/2 top-1/2">
         {list.map((it, k) => (
           <li key={`${k}-${it.key}`} data-i={k} ref={(el) => { if (el) cards.current[k] = el; }}

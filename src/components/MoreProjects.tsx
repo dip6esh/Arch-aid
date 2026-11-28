@@ -17,7 +17,7 @@ const lean = (e: React.PointerEvent<HTMLElement>) => {
 };
 const settle = (e: React.PointerEvent<HTMLElement>) => { ["--rx", "--ry", "--px", "--py"].forEach((v) => e.currentTarget.style.removeProperty(v)); };
 
-const ALL = { mode: "curtain", eyebrow: "Index", title: "All projects" } as const;
+const ALL = { mode: "curtain", title: "Projects" } as const;
 
 /**
  * Scrollable strip of the other projects, shown under a project's album.

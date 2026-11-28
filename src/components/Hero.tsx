@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef } from "react";
 import { useEnquiry } from "./EnquiryDialog";
 import { INTRO_EVENT, introDone } from "./Preloader";
 import { Arrow } from "./Arrow";
+import { TLink } from "./Transition";
 
 const N = 240;
 // Every stage uses the SAME template: eyebrow, 2-line headline (last word accented), one line of copy, action slot.
@@ -104,7 +105,7 @@ export function Hero() {
       if (!started) act = -1; // hold the text until the preloader has finished
       stages.current.forEach((el, k) => { if (el) el.dataset.on = k === act ? "1" : "0"; });
       segs.current.forEach((el, k) => { if (el) el.style.transform = `scaleX(${Math.min(1, Math.max(0, (p - B[k]) / ((k < 3 ? B[k + 1] : 1) - B[k])))})`; });
-      labs.current.forEach((el, k) => { if (el) el.dataset.active = k === act ? "1" : "0"; });
+      labs.current.forEach((el, k) => { if (el) { el.dataset.active = k === act ? "1" : "0"; el.dataset.done = k < act ? "1" : "0"; } });
       if (cue.current) cue.current.style.opacity = scrollY > 10 ? "0" : "1";
       if (rail.current) rail.current.style.transform = `scaleY(${p})`;
       if (Math.abs(tgt - cur) > 0.02 || shown !== i) raf = requestAnimationFrame(tick);
@@ -158,8 +159,8 @@ export function Hero() {
             <div className="absolute inset-y-0 right-full w-20 bg-gradient-to-l from-black/40 to-transparent opacity-[var(--o)]" />
           </div>
         </div>
-        {/* text layer follows the visible viewport (dvh); the image/canvas behind it always fills the full lvh */}
-        <div className="absolute inset-x-0 top-0 h-dvh">
+        {/* text layer is sized to the SMALL viewport (svh), which never changes when the mobile browser bar shows/hides, so the text stays put; the image/canvas behind it always fills the full lvh */}
+        <div className="absolute inset-x-0 top-0 h-svh">
         <div ref={cue} className="absolute bottom-[clamp(2rem,8vh,5rem)] right-[clamp(1.25rem,5vw,5rem)] z-10 hidden text-[.7rem] tracking-[.3em] transition-opacity [writing-mode:vertical-rl] md:block">SCROLL TO EXPLORE</div>
         <div className="pointer-events-none absolute inset-x-0 bottom-[clamp(4.5rem,12vh,7rem)] z-10 h-[min(58svh,30rem)]">
           {STAGES.map((st, k) => {
@@ -172,7 +173,7 @@ export function Hero() {
                   <p className="fade mb-7 max-w-sm text-white/85" style={{ "--d": 500 } as React.CSSProperties}>{st.d}</p>
                   <div className="fade flex flex-col gap-3 sm:flex-row" style={{ "--d": 650 } as React.CSSProperties}>
                     {k === 0 && <>
-                      <a href="#projects" className="btn btn-light max-sm:w-full max-sm:justify-between">Explore Our Work <span className="btn-dot"><Arrow dir="down" /></span></a>
+                      <TLink href="/projects" via={{ mode: "curtain", title: "Projects" }} className="btn btn-light max-sm:w-full max-sm:justify-between">Explore Our Work <span className="btn-dot"><Arrow /></span></TLink>
                       <button onClick={enquire} className="btn btn-line max-sm:w-full max-sm:justify-center">Discuss Your Project</button>
                     </>}
                     {k === 3 && <button onClick={enquire} className="btn btn-light max-sm:w-full max-sm:justify-between">Start your project <span className="btn-dot"><Arrow /></span></button>}
@@ -186,13 +187,13 @@ export function Hero() {
           <div className="flex max-w-lg gap-2">
             {LABELS.map((l, k) => (
               <button key={l} onClick={() => go(k)} aria-label={`Go to ${l}`} className="group flex-1 pt-3 text-left">
-                <span className="block h-[3px] overflow-hidden rounded-full bg-white/25"><span ref={(el) => { segs.current[k] = el; }} className="block h-full origin-left scale-x-0 bg-acc" /></span>
-                <span ref={(el) => { labs.current[k] = el; }} data-active="0" className="mt-2 block text-[.55rem] uppercase tracking-[.12em] text-white/45 transition-colors duration-500 group-hover:text-white data-[active=1]:text-white sm:text-[.65rem] sm:tracking-[.2em]">{l}</span>
+                <span className="block h-1 overflow-hidden rounded-full bg-black/40 ring-1 ring-white/25"><span ref={(el) => { segs.current[k] = el; }} className="block h-full origin-left scale-x-0 rounded-full bg-[#e6b050] shadow-[0_0_10px_rgb(230_176_80/.85)]" /></span>
+                <span ref={(el) => { labs.current[k] = el; }} data-active="0" data-done="0" className="mt-2 block text-[.55rem] font-semibold uppercase tracking-[.12em] text-white/60 [text-shadow:0_1px_6px_rgb(0_0_0/.65)] transition-colors duration-500 group-hover:text-white data-[done=1]:text-[#e6b050] data-[active=1]:text-white sm:text-[.65rem] sm:tracking-[.2em]">{l}</span>
               </button>
             ))}
           </div>
         </div></div>
-        <div aria-hidden className="absolute left-[clamp(.75rem,2vw,2rem)] top-1/2 z-10 hidden h-40 w-px -translate-y-1/2 bg-white/25 md:block"><div ref={rail} className="h-full origin-top scale-y-0 bg-acc" /></div>
+        <div aria-hidden className="absolute left-[clamp(.75rem,2vw,2rem)] top-1/2 z-10 hidden h-40 w-[3px] -translate-y-1/2 rounded-full bg-black/40 ring-1 ring-white/25 md:block"><div ref={rail} className="h-full origin-top scale-y-0 rounded-full bg-[#e6b050] shadow-[0_0_10px_rgb(230_176_80/.85)]" /></div>
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
+import { TLink } from "./Transition";
 import { useRef } from "react";
 import { reduced, useDrive } from "./Drive";
 import { useEnquiry } from "./EnquiryDialog";
@@ -33,7 +33,7 @@ export function About() {
           <Reveal><p className="eyebrow mb-5">The practice</p></Reveal>
           <Words className="mb-7 text-[clamp(2.6rem,6vw,5.5rem)]">Good design is felt, long before it’s noticed.</Words>
           <Reveal><p className="max-w-md text-lg text-mute">Every space has a purpose. Every person has a way of experiencing it. We bring these together through thoughtful planning, considered materials and a distinctive design perspective.</p></Reveal>
-          <Reveal><div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4"><Magnetic><button onClick={enquire} className="btn btn-solid">Start a conversation <span className="btn-dot"><Arrow /></span></button></Magnetic><Link href="/about" className="text-sm font-semibold underline decoration-acc decoration-2 underline-offset-8 transition-colors hover:text-acc"><span className="inline-flex items-center gap-2">More about us <Arrow className="size-4" /></span></Link></div></Reveal>
+          <Reveal><div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4"><Magnetic><button onClick={enquire} className="btn btn-solid">Start a conversation <span className="btn-dot"><Arrow /></span></button></Magnetic><TLink href="/about" via={{ mode: "wipe", title: "About" }} className="text-sm font-semibold underline decoration-acc decoration-2 underline-offset-8 transition-colors hover:text-acc"><span className="inline-flex items-center gap-2">More about us <Arrow className="size-4" /></span></TLink></div></Reveal>
           <Reveal>
             <dl className="mt-12 grid grid-cols-3 gap-3">
               {STATS.map(([v, l]) => { const n = parseInt(v); const s = v.replace(String(n), ""); return (

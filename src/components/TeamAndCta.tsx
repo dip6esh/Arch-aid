@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
+import { TLink } from "./Transition";
 import { img } from "@/lib/content";
 import { useEnquiry } from "./EnquiryDialog";
 import { Magnetic } from "./Magnetic";
@@ -17,7 +17,7 @@ export function Cta() {
         <Reveal><p className="mb-8 max-w-lg opacity-90">Whether you’re planning a new home, transforming an existing space or developing a commercial project, we’d love to hear what you’re envisioning.</p></Reveal>
         <Reveal><div className="flex flex-wrap gap-3">
           <Magnetic><button onClick={enquire} className="btn btn-light">Discuss Your Project <span className="btn-dot"><Arrow /></span></button></Magnetic>
-          <Link href="/contact" className="btn btn-line">Get in Touch</Link>
+          <TLink href="/contact" via={{ mode: "wipe", title: "Contact" }} className="btn btn-line">Get in Touch</TLink>
         </div></Reveal>
       </div>
     </section>

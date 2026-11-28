@@ -27,10 +27,19 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 /** Runs before first paint: apply the saved theme, else the visitor's system preference. */
 const THEME_INIT = `try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`;
 
+/**
+ * Mobile browsers show/hide their address / bottom bar while you scroll, and each time they fire a window "resize" that only changes the height.
+ * Every scroll-linked animation on the site (reveals, word rises, image unmasks, parallax, the Process arch...) re-measures the viewport on a
+ * resize, so each bar toggle re-scaled all of them at once and the page visibly jumped. On touch devices this swallows those height-only
+ * resizes (a small change, same width) before anything else sees them. Real changes (rotation, on-screen keyboard) still get through.
+ * It is an inline script so it is registered before any other code can add a resize listener.
+ */
+const STABLE_VIEWPORT = `(function(){try{if(!matchMedia("(pointer: coarse)").matches)return;var w=innerWidth,h=innerHeight;addEventListener("resize",function(e){var nw=innerWidth,nh=innerHeight;if(nw===w&&Math.abs(nh-h)<=h*0.2){e.stopImmediatePropagation();return}w=nw;h=nh},true)}catch(x){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${instrument.variable}`}>
-      <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT }} /></head>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_INIT }} /><script dangerouslySetInnerHTML={{ __html: STABLE_VIEWPORT }} /></head>
       <body className="font-sans"><SmoothScroll /><ScrollProgress /><Cursor />
         <EnquiryProvider><TransitionProvider><Nav /><main>{children}</main><Footer /><MobileBar /><FloatingActions /><ScrollTop /></TransitionProvider></EnquiryProvider></body>
     </html>
